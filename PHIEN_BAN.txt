@@ -1,0 +1,37 @@
+LỊCH SỬ PHIÊN BẢN – QUẢN LÝ HỌC ONLINE Ô TÔ
+(Phiên bản đang chạy hiện ở góc trái trên cùng của tool.)
+
+v1.3 – 20/10/2026
+  + Mã nguồn đưa lên GitHub: https://github.com/HP-wukoong/QUAN_LY_LT_ONLINE
+    Cài đặt → "Cập nhật phiên bản" → Kiểm tra / Cập nhật ngay (tự sao lưu, giữ dữ liệu, tự khởi động lại).
+    Tool tự kiểm tra bản mới khi mở; có bản mới thì hiện nút vàng trên thanh tiêu đề. Dự phòng: CAP_NHAT.bat.
+  + Tin nhắn Zalo theo mẫu mới: "Em gửi danh sách N học viên học online anh Hiếu chưa đóng phí (… đ):" + danh sách,
+    bỏ lời chào/lời cảm ơn. Báo học xong cùng kiểu, tách nhóm Đã đóng phí / Chưa đóng phí.
+  + Khung "Gửi Zalo": sửa trực tiếp nội dung, kèm ẢNH THÔNG BÁO chủ đề lái xe vẽ theo nội dung đang sửa;
+    Copy chữ / Copy ảnh / Tải ảnh PNG; đổi tiêu đề & dòng chân ảnh, lưu làm mặc định.
+  + Cài đặt → "Mẫu tin nhắn Zalo": sửa câu dẫn mặc định với chỗ trống {so} {xung_ho} {ten} {tien}.
+  + GV có "Gọi là": anh / chị / thầy / cô (GV cũ: Thầy → anh, Cô → chị).
+  + Sao lưu: kiểm tra MỖI PHÚT, có thay đổi mới sao lưu; giữ 10 bản mới nhất; bản cũ vào thùng rác sao lưu,
+    tự xóa sau 30 ngày (khôi phục / lấy lại được trong 30 ngày đó).
+  + Mục Sao lưu có các chấm (i) giải thích chức năng từng nút, từng ô.
+
+v1.2.1 – 17/10/2026
+  * Sửa: lọc "Đang học" + người chạy không ra danh sách vì ô "Trả người chạy = Chưa trả" (chỉ dành cho HV đã xong)
+    còn sót lại. Nay đổi trạng thái sẽ tự bỏ lọc mâu thuẫn và báo cho biết.
+  + Ô lọc đang dùng được tô xanh; khi không có kết quả, tool liệt kê các lọc đang bật + nút "Bỏ các lọc khác".
+
+v1.2 – 17/10/2026
+  + Người chạy mặc định "MINE": HV chưa gán ai tự về MINE (cả dữ liệu cũ, HV thêm tay, HV thêm từ file).
+    MINE không xóa được, không tính vào "chưa trả tiền người chạy". Bỏ nhắc "Chưa gán người chạy".
+  + Tích "Đã báo GV" cho HV đã học xong (lưu ngày báo), lọc "Xong – chưa báo GV", thao tác hàng loạt.
+  + Cảnh báo "CHƯA BÁO GV" trong khung Cần xử lý + ô số đỏ ở Việc hôm nay.
+  + Khung "Báo GV": gom theo GV, soạn sẵn tin Zalo báo HV đã chạy đủ giờ (kèm số HV chưa đóng phí), nút Đã báo.
+  + Xuất Excel thêm cột ĐÃ BÁO GV.
+  * Nâng cấp từ v1.1: tự sao lưu trước; HV đã xong từ file QL cũ (không có ngày xong) coi như đã báo GV.
+
+v1.1 – 15/10/2026
+  Bản sau tranh luận 5 con (xem BIEN_BAN_5_CON.html): chặn nhập sai, chống nạp trùng/bấm đúp,
+  hoàn tác lần nạp, Đạt theo file, dự kiến theo lịch thật, tin nhắn Zalo, thống kê tháng, sao lưu kiểm tra toàn vẹn.
+
+v1.0 – 15/10/2026
+  Bản đầu tiên.

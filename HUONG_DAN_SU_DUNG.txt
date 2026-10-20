@@ -1,0 +1,72 @@
+QUẢN LÝ HỌC ONLINE Ô TÔ  v1.3 (20/10/2026)  –  HƯỚNG DẪN NHANH
+=====================================================
+
+1. CÀI LẦN ĐẦU (1 lần)
+   - Máy cần Python 3 (đã có 3.11 là được). Không cần mạng, không cần pip:
+     thư viện đọc Excel đã kèm sẵn trong app\vendor.
+   - Giải nén thư mục này vào ổ D: (vd D:\QL_HOC_ONLINE_OTO). Tránh để trong Google Drive.
+   - Bấm đúp TAO_SHORTCUT_KHOI_DONG.bat để có biểu tượng trên Desktop
+     (tùy chọn: cho tool tự chạy khi bật máy).
+
+2. MỞ TOOL
+   - Bấm đúp CHAY_TOOL.bat (hoặc shortcut). Chrome tự mở ra tool.
+   - Cửa sổ đen phải để mở (thu nhỏ được). Tắt cửa sổ đen = tắt tool.
+   - Mở lại khi tool đang chạy: tool chỉ mở thêm cửa sổ Chrome, không chạy 2 lần.
+
+3. CHUYỂN DỮ LIỆU CŨ (1 lần)
+   - Tab "Nạp file" → kéo thả QL_HOC_ONLINE.xlsx → "Nhập vào tool".
+   - Tool tự chuẩn hóa: xong/XONG/xONG → đã đóng phí; ĐÃ CK/ĐÃ TT/ok → đã trả người chạy;
+     "A VUI" = "VUI"; BSTD-13 → BSTĐ-13; ghi chú khác giữ ở cột Ghi chú.
+   - Nạp lại file này lần nữa KHÔNG ghi đè gì đã sửa trong tool (chỉ điền ô trống).
+
+4. VIỆC HẰNG NGÀY
+   a) Xuất Learning Report từ phần mềm học online, ĐẶT TÊN FILE THEO KHÓA: C1-20.xlsx, BSTĐ-25.xlsx, CE-34.xlsx…
+   b) Kéo thả 1 hoặc nhiều file vào tool → xem trước → "Cập nhật tất cả".
+      - Tool khớp theo CCCD, chỉ cập nhật HV có trong danh sách chạy online.
+      - HV có giờ chạy → tự chuyển ĐANG HỌC; đạt đủ các môn (theo chữ "Đạt" trong file) → tự ĐÃ HỌC XONG.
+      - Tool KHÔNG BAO GIỜ tự lùi trạng thái; nếu file nói chưa đạt mà đang ghi xong → báo đỏ.
+      - Chặn: file y hệt đã nạp, giờ học bị GIẢM (chọn nhầm file cũ), ngày lọc ở tương lai.
+      - Nạp nhầm? Tab Nạp file → Lịch sử → "Hoàn tác" (lần nạp gần nhất).
+      - HV ngoài danh sách: mở mục "HV KHÔNG có trong danh sách", tích + chọn GV để thêm.
+   c) Tab "Việc hôm nay": khóa nào cần lọc, HV lệch/đứng giờ/lẽ ra đã xong, sắp xong,
+      GV chưa đóng phí (nút Copy tin nhắn Zalo), chưa trả tiền người chạy (nút Đã trả hết).
+   d) HV ĐÃ HỌC XONG → báo cho giáo viên: khung "Báo GV" (tab Việc hôm nay) gom theo từng GV,
+      bấm "Copy tin báo" gửi Zalo rồi bấm "Đã báo". HV xong mà chưa báo sẽ hiện đỏ ở "Cần xử lý".
+      Có thể tích ô "Đã báo GV" từng dòng trong tab Học viên.
+   e) Người chạy: HV không gán ai mặc định là MINE (không tính vào tiền trả người chạy).
+   f) Tab "Học viên": tích GV đóng phí / đã trả người chạy, đổi trạng thái, gán người chạy ngay trên bảng.
+      Chọn nhiều dòng (giữ Shift để chọn dải) → thanh thao tác hàng loạt hiện ở dưới.
+
+5. CÁCH TÍNH DỰ KIẾN (theo lịch thật)
+   Giờ còn = tổng các môn CHƯA ĐẠT (định mức − đã chạy) + vài phút dư mỗi môn (cài đặt, mặc định 10').
+   Mỗi ngày chạy tối đa 8 giờ (cài đặt). Ngày lọc: nạp file trước 12h trưa → ngày đó còn chạy nửa ngày;
+   sau 12h → bắt đầu tính từ hôm sau. Bỏ qua ngày nghỉ trong tuần/ngày lễ nếu có khai báo.
+   Số ngày còn không bao giờ âm; nếu đã qua ngày dự kiến mà chưa xong → báo "lẽ ra đã xong – lọc lại".
+   Tốc độ thực tế (giờ/ngày giữa các lần lọc) chỉ để tham khảo, xem trong chi tiết HV và thống kê người chạy.
+
+6. TIỀN
+   - Phí GV và tiền trả người chạy được LƯU THEO GIÁ LÚC TÍCH. Đổi giá trong Cài đặt chỉ áp dụng lần tích sau.
+   - Thống kê theo GV / người chạy / khóa / tháng; xuất Excel đủ 4 sheet.
+
+7. SAO LƯU
+   - Tự kiểm tra mỗi 1 phút: có thay đổi dữ liệu thì tạo 1 bản sao lưu (thư mục backups), có kiểm tra toàn vẹn.
+   - Giữ 10 bản mới nhất; bản cũ hơn vào backups\_thung_rac, 30 ngày sau tự xóa.
+   - Cài đặt → "Thư mục sao lưu thêm": trỏ vào thư mục Google Drive (vd G:\My Drive\SaoLuu_HocOnline).
+   - Khôi phục: Cài đặt → chọn bản → tool cho xem số HV của bản đó trước khi đồng ý.
+   - Chuyển máy: chép nguyên thư mục (gồm data và backups) sang máy mới là xong.
+
+8. LỖI THƯỜNG GẶP
+   - "Mất kết nối tới tool": cửa sổ đen đã bị tắt → mở lại CHAY_TOOL.bat.
+   - File .xls: mở bằng Excel → Lưu thành .xlsx rồi nạp.
+   - Chỉ dùng trên 1 máy. Không đặt thư mục data trên ổ mạng.
+
+9. CẬP NHẬT PHIÊN BẢN MỚI
+   - Cài đặt → "Cập nhật phiên bản" → Kiểm tra cập nhật → Cập nhật ngay. Tool tự sao lưu, tải bản mới từ
+     GitHub (https://github.com/HP-wukoong/QUAN_LY_LT_ONLINE), giữ nguyên dữ liệu và tự khởi động lại.
+   - Khi có bản mới, thanh tiêu đề hiện nút vàng "⬆ Có bản vX".
+   - Không mở được tool: tắt cửa sổ đen rồi chạy CAP_NHAT.bat.
+
+10. GỬI ZALO CHO GIÁO VIÊN
+   - Tab Việc hôm nay → khung "GV chưa đóng phí" hoặc "Báo GV" → nút 📨 Gửi Zalo.
+   - Sửa chữ trực tiếp nếu cần (ảnh tự vẽ lại theo chữ), Copy chữ / Copy ảnh rồi Ctrl+V vào Zalo.
+   - Đổi câu mặc định: Cài đặt → Mẫu tin nhắn Zalo. Cách gọi GV (anh/chị/thầy/cô): tab Giáo viên → Sửa.
