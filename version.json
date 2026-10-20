@@ -1,5 +1,5 @@
 {
-  "version": "1.3",
+  "version": "1.3.1",
   "date": "20/10/2026",
-  "notes": "Tin nhắn Zalo mẫu mới + ảnh thông báo sửa được; sao lưu mỗi phút giữ 10 bản + thùng rác 30 ngày; chú thích (i) mục sao lưu; cập nhật từ GitHub."
+  "notes": "Sửa: sau khi cập nhật, tool khởi động lại đúng cổng cũ nên trang đang mở tự nạp lại.\nTin nhắn Zalo mẫu mới + ảnh thông báo sửa được; sao lưu mỗi phút giữ 10 bản + thùng rác 30 ngày; chú thích (i) mục sao lưu; cập nhật từ GitHub."
 }

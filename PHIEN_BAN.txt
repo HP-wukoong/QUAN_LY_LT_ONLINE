@@ -1,6 +1,9 @@
 LỊCH SỬ PHIÊN BẢN – QUẢN LÝ HỌC ONLINE Ô TÔ
 (Phiên bản đang chạy hiện ở góc trái trên cùng của tool.)
 
+v1.3.1 – 20/10/2026
+  * Sửa: sau khi cập nhật, tool khởi động lại đúng cổng cũ → trang đang mở tự nạp lại bản mới.
+
 v1.3 – 20/10/2026
   + Mã nguồn đưa lên GitHub: https://github.com/HP-wukoong/QUAN_LY_LT_ONLINE
     Cài đặt → "Cập nhật phiên bản" → Kiểm tra / Cập nhật ngay (tự sao lưu, giữ dữ liệu, tự khởi động lại).

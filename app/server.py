@@ -11,7 +11,7 @@ from urllib.parse import urlparse, parse_qs, unquote
 
 APP_NAME = "QUẢN LÝ HỌC ONLINE Ô TÔ"
 APP_ID = "hoc-online-oto"
-VERSION = "1.3"
+VERSION = "1.3.1"
 VERSION_DATE = "20/10/2026"
 SCHEMA_VERSION = 4
 GITHUB_REPO = "HP-wukoong/QUAN_LY_LT_ONLINE"
@@ -1635,7 +1635,7 @@ def restart_later():
         kw = {"cwd": ROOT}
         if os.name == "nt":
             kw["creationflags"] = getattr(subprocess, "CREATE_NEW_CONSOLE", 0x10)
-        subprocess.Popen([sys.executable, os.path.join(BASE, "server.py"), "--no-browser"], **kw)
+        subprocess.Popen([sys.executable, os.path.join(BASE, "server.py"), "--no-browser", "--restart-port=%d" % SRV["port"]], **kw)
         os._exit(0)
     threading.Thread(target=go, daemon=True).start()
 
@@ -1819,7 +1819,10 @@ def main():
             print("LOI cap nhat:", e)
         return
     port = PORT
-    for _ in range(10):
+    rp = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--restart-port=")), None)
+    if rp:                                   # khởi động lại sau cập nhật: giữ đúng cổng cũ để trang đang mở tự nạp lại
+        port = int(rp)
+    for _ in range(10 if not rp else 0):
         if is_our_tool(port):
             print("Tool dang chay san -> mo trinh duyet")
             open_browser("http://127.0.0.1:%d" % port)
@@ -1834,8 +1837,20 @@ def main():
     except Exception:
         traceback.print_exc()
     threading.Thread(target=backup_loop, daemon=True).start()
-    srv = ThreadingHTTPServer(("127.0.0.1", port), H)
+    srv = None
+    for i in range(60 if rp else 1):
+        try:
+            srv = ThreadingHTTPServer(("127.0.0.1", port), H)
+            break
+        except OSError:
+            if not rp:
+                raise
+            time.sleep(0.5)
+    if srv is None:
+        print("Khong mo duoc cong %d – hay tat het cua so tool roi mo lai CHAY_TOOL.bat" % port)
+        return
     SRV["srv"] = srv
+    SRV["port"] = port
     if get_settings()["tu_kiem_tra_cap_nhat"] == "1":
         threading.Thread(target=check_update, daemon=True).start()
     print("=" * 62)
