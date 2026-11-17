@@ -1,4 +1,4 @@
-QUẢN LÝ HỌC ONLINE Ô TÔ  v1.3 (20/10/2026)  –  HƯỚNG DẪN NHANH
+QUẢN LÝ HỌC ONLINE Ô TÔ  v1.4 (17/11/2026)  –  HƯỚNG DẪN NHANH
 =====================================================
 
 1. CÀI LẦN ĐẦU (1 lần)
@@ -70,3 +70,8 @@ QUẢN LÝ HỌC ONLINE Ô TÔ  v1.3 (20/10/2026)  –  HƯỚNG DẪN NHANH
    - Tab Việc hôm nay → khung "GV chưa đóng phí" hoặc "Báo GV" → nút 📨 Gửi Zalo.
    - Sửa chữ trực tiếp nếu cần (ảnh tự vẽ lại theo chữ), Copy chữ / Copy ảnh rồi Ctrl+V vào Zalo.
    - Đổi câu mặc định: Cài đặt → Mẫu tin nhắn Zalo. Cách gọi GV (anh/chị/thầy/cô): tab Giáo viên → Sửa.
+
+11. HỌC VIÊN NGHỈ NGANG (TREO)
+   - Tab Học viên: bấm nút ⏸ cạnh ô trạng thái → nhập lý do → Treo.
+   - HV treo nằm ở khung "Treo" (tab Việc hôm nay), không còn bị nhắc phí / báo GV.
+   - Khi HV đi học lại: bấm ▶ Học lại (đổi khóa mới nếu có) → HV quay lại danh sách, thu phí như bình thường.

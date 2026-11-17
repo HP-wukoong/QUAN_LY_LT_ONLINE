@@ -128,6 +128,9 @@ svg text{font-size:10px;fill:#667085}
 .cmp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:14px}
 @media(max-width:900px){.cmp{grid-template-columns:minmax(0,1fr)}}
 .cmp canvas{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff}
+tr.treo td{background:#f6f3ff}
+.t5{background:#ede7fb;color:#5b3fb5}
+.btn.ib{padding:1px 6px;font-size:12px;margin-left:3px}
 .upd{background:#ffd166;color:#3a2a00;border-radius:12px;padding:2px 9px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
 #phiGv td:last-child,#baoGv td:last-child,#traNth td:last-child{white-space:normal}
 #phiGv td:last-child .btn,#baoGv td:last-child .btn{margin:2px 0}
@@ -173,6 +176,7 @@ svg text{font-size:10px;fill:#667085}
     <div class="card"><h2>💰 GV chưa đóng phí <span class="sub">📨 soạn tin + ảnh gửi Zalo</span></h2><div id="phiGv"></div></div>
     <div class="card"><h2>🧾 Chưa trả tiền người chạy <span class="sub">HV đã xong, có người chạy, chưa thanh toán</span></h2><div id="traNth"></div></div>
   </div>
+  <div class="card"><h2>⏸ Treo – học viên nghỉ ngang <span class="sub" id="treoSub">chờ học lại mới thu phí · không nằm trong các nhắc nhở khác</span><span class="ti" data-tip="Học viên đang học / đã chạy xong nhưng nghỉ ngang, chưa thu được phí. Bấm nút ⏸ cạnh trạng thái (tab Học viên) để đưa vào đây. Khi học viên đi học lại, bấm “▶ Học lại” – có thể đổi khóa mới – rồi thu phí như bình thường."></span></h2><div id="treoList"></div></div>
 </section>
 
 <!-- ============ HỌC VIÊN ============ -->
@@ -187,7 +191,7 @@ svg text{font-size:10px;fill:#667085}
     <select id="fNth"></select>
     <select id="fPhi"><option value="">Phí GV: tất cả</option><option value="1">GV đã đóng</option><option value="0">GV chưa đóng</option></select>
     <select id="fTt"><option value="">Trả người chạy: tất cả</option><option value="1">Đã trả</option><option value="0">Chưa trả (chỉ HV đã xong)</option></select>
-    <select id="fKhac"><option value="">Lọc khác…</option><option value="chuabao">Xong – chưa báo GV</option><option value="canloc">Cần lọc lại</option><option value="quahan">Lẽ ra đã xong</option><option value="dunggio">Đứng giờ</option><option value="lech">Lệch / xong chưa đạt</option><option value="7ngay">Xong trong 7 ngày tới</option><option value="chualoc">Chưa có dữ liệu lọc</option></select>
+    <select id="fKhac"><option value="">Lọc khác…</option><option value="treo">⏸ Đang treo (nghỉ ngang)</option><option value="chuabao">Xong – chưa báo GV</option><option value="canloc">Cần lọc lại</option><option value="quahan">Lẽ ra đã xong</option><option value="dunggio">Đứng giờ</option><option value="lech">Lệch / xong chưa đạt</option><option value="7ngay">Xong trong 7 ngày tới</option><option value="chualoc">Chưa có dữ liệu lọc</option></select>
     <button class="btn sm" id="fReset">✕ Bỏ lọc</button>
     <span style="flex:1"></span>
     <button class="btn" id="btnAdd">＋ Thêm học viên</button>
@@ -209,6 +213,8 @@ svg text{font-size:10px;fill:#667085}
     <select id="bSt"><option value="">Đổi trạng thái…</option><option value="CHUA">Chưa học</option><option value="DANG">Đang học</option><option value="XONG">Đã học xong</option></select>
     <select id="bNth"></select>
     <select id="bGv"></select>
+    <button class="btn sm" data-b="treo1">⏸ Treo (nghỉ ngang)</button>
+    <button class="btn sm" data-b="treo0">▶ Học lại</button>
     <button class="btn sm" data-b="bao1">📣 Đã báo GV</button>
     <button class="btn sm" data-b="phi1">✔ GV đã đóng phí</button>
     <button class="btn sm" data-b="phi0">✕ GV chưa đóng</button>
@@ -379,7 +385,7 @@ async function loadAll(){
   const sid = new Set(S.map(s=>s.id)); [...sel].forEach(i=>{ if(!sid.has(i)) sel.delete(i); });
   S.forEach((s,i)=>{ s.stt=i+1; s._q = noAcc([s.ho_ten,s.cccd,s.ma_dk,s.ghi_chu,s.khoa,s.gv_ten,s.nth_ten].join(" "));
     s.lechxong = s.trang_thai==="XONG" && s.mons.length && !s.all_dat;
-    s.uu_tien = s.trang_thai==="XONG" ? (s.lechxong? 1 : !s.bao_gv ? 1 : 9) : s.trang_thai==="CHUA" ? 5 : (s.qua_du_kien||s.dung_gio>=+SET.ngay_dung_gio ? 0 : s.can_loc ? 2 : 3);
+    s.uu_tien = s.treo ? 10 : s.trang_thai==="XONG" ? (s.lechxong? 1 : !s.bao_gv ? 1 : 9) : s.trang_thai==="CHUA" ? 5 : (s.qua_du_kien||s.dung_gio>=+SET.ngay_dung_gio ? 0 : s.can_loc ? 2 : 3);
     s._sortDate = s.ngay_du_kien || "9999"; });
   fillSelects(); renderTable(); renderOverview(); if($("#t-dm").classList.contains("on")) renderCats();
 }
@@ -413,10 +419,11 @@ function filtered(){
   const d7 = addDays(TODAY, 7);
   const stOk = s => !fSt || (fSt==="CHUAXONG" ? (s.trang_thai!=="XONG" || s.lechxong || !s.bao_gv) : s.trang_thai===fSt);
   let L = S.filter(s =>
-    (!q || q.split(/\s+/).every(w=>s._q.includes(w))) && stOk(s) && (!kh || s.khoa===kh) &&
+    (!q || q.split(/\s+/).every(w=>s._q.includes(w))) && (k2==="treo" || stOk(s)) && (!kh || s.khoa===kh) &&
     (!gv || (gv==="-" ? !s.gv_id : String(s.gv_id)===gv)) && (!nth || (nth==="-" ? !s.nth_id : String(s.nth_id)===nth)) &&
     (phi==="" || String(s.phi_gv)===phi) && (tt==="" || (tt==="1" ? s.nth_tt : (!s.nth_tt && s.trang_thai==="XONG" && s.nth_id && s.nth_ten!=="MINE"))) &&
-    (!k2 || (k2==="chualoc" && !s.ngay_loc) || (k2==="chuabao" && s.trang_thai==="XONG" && !s.bao_gv) || (k2==="lech" && (s.lechxong || s.lech)) || (k2==="canloc" && s.can_loc) ||
+    (k2==="treo" ? s.treo : (fSt==="" || !s.treo)) &&
+    (!k2 || k2==="treo" || (k2==="chualoc" && !s.ngay_loc) || (k2==="chuabao" && s.trang_thai==="XONG" && !s.bao_gv) || (k2==="lech" && (s.lechxong || s.lech)) || (k2==="canloc" && s.can_loc) ||
       (k2==="quahan" && s.qua_du_kien) || (k2==="dunggio" && s.dung_gio>=+SET.ngay_dung_gio) ||
       (k2==="7ngay" && s.ngay_du_kien && s.ngay_du_kien>=TODAY && s.ngay_du_kien<=d7)));
   const k = sortK;
@@ -459,11 +466,11 @@ function renderTable(){
   $("#tb").innerHTML = shown.length ? shown.map(s=>{
     const prog = s.mons.length ? `<span class="bar"><i class="${s.all_dat?"full":""}" style="width:${Math.min(100,s.pct)}%"></i></span> <b>${s.pct}%</b> <span class="small ${s.so_dat===s.so_mon?"":"muted"}">${s.so_dat}/${s.so_mon} môn</span>
        <div class="mons">${s.mons.map(m=>`<span class="mon ${m.dat?"d":""}" title="${esc(m.mon)}: ${hm(m.done)} / ${hm(m.norm)}">${esc(m.short)} ${m.dat?"✔":hm(m.done)}</span>`).join("")}</div>${s.lech?`<div class="tag t1" title="${esc(s.lech)}">⚠ lệch kết quả</div>`:""}` : `<span class="small muted">—</span>`;
-    return `<tr data-id="${s.id}" class="${sel.has(s.id)?"sel":""}">
+    return `<tr data-id="${s.id}" class="${sel.has(s.id)?"sel":""} ${s.treo?"treo":""}">
     <td class="c0"><input type="checkbox" class="chk rs" ${sel.has(s.id)?"checked":""}></td>
     <td class="nm"><a href="#" class="op"><b>${esc(s.ho_ten)}</b></a><div class="small muted">${esc(s.cccd)}${s.hang?" · "+esc(s.hang):""}</div></td>
     <td>${esc(s.khoa)}</td>
-    <td><select class="st ${s.trang_thai}" data-f="trang_thai">${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${k===s.trang_thai?"selected":""}>${v}</option>`).join("")}</select></td>
+    <td><select class="st ${s.trang_thai}" data-f="trang_thai">${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${k===s.trang_thai?"selected":""}>${v}</option>`).join("")}</select>${s.treo?`<button class="btn ib qtreo noprint" data-v="0" title="Học viên đi học lại – bỏ treo">▶</button><div class="tag t5" style="margin-top:2px" title="${esc((s.treo_ly_do||"")+(s.treo_ngay?" · treo từ "+dmy(s.treo_ngay):""))}">⏸ TREO${s.treo_ngay?" "+dm(s.treo_ngay):""}</div>`:`<button class="btn ib qtreo noprint" data-v="1" title="Treo – học viên nghỉ ngang, chờ học lại mới thu">⏸</button>`}</td>
     <td style="text-align:center">${s.trang_thai==="XONG"?`<input type="checkbox" class="chk" data-f="bao_gv" ${s.bao_gv?"checked":""} title="${s.bao_gv?(s.bao_gv_ngay?"Đã báo GV ngày "+dmy(s.bao_gv_ngay):"Đã báo GV"):"Chưa báo GV – HV đã chạy xong"}">${s.bao_gv?"":'<div class="tag t1" style="margin-top:2px">chưa báo</div>'}`:'<span class="muted small">—</span>'}</td>
     <td style="text-align:center"><input type="checkbox" class="chk" data-f="phi_gv" ${s.phi_gv?"checked":""} title="${s.phi_gv_ngay?"Tích ngày "+dmy(s.phi_gv_ngay)+(s.phi_gv_tien?" · "+money(s.phi_gv_tien):""):"GV chưa đóng phí"}"></td>
     <td><select data-f="nth_id" style="max-width:110px">${nthOpt(s.nth_id)}</select></td>
@@ -475,7 +482,7 @@ function renderTable(){
     <td class="wrap small" style="max-width:200px;min-width:90px"><span class="note" title="Bấm để sửa ghi chú">${esc(s.ghi_chu)||'<span class="muted noprint">✎</span>'}</span></td></tr>`; }).join("")
     : `<tr><td colspan="13" class="empty">Không có học viên phù hợp bộ lọc.<div style="margin-top:6px">Đang lọc: ${activeFilters().map(t=>`<span class="tag t3">${esc(t)}</span>`).join(" ")||"—"}</div><button class="btn sm pri" style="margin-top:8px" onclick="keepStatusClear()">Bỏ các lọc khác, giữ trạng thái</button></td></tr>`;
   const c = st => L.filter(s=>s.trang_thai===st).length;
-  const noPhi = L.filter(s=>!s.phi_gv).length, noTra = L.filter(s=>s.trang_thai==="XONG"&&s.nth_id&&!s.nth_tt&&s.nth_ten!=="MINE").length, noBao = L.filter(s=>s.trang_thai==="XONG"&&!s.bao_gv).length;
+  const noPhi = L.filter(s=>!s.phi_gv&&!s.treo).length, noTra = L.filter(s=>s.trang_thai==="XONG"&&s.nth_id&&!s.nth_tt&&s.nth_ten!=="MINE").length, noBao = L.filter(s=>s.trang_thai==="XONG"&&!s.bao_gv&&!s.treo).length;
   $("#hvSum").innerHTML = `Đang hiện <b>${L.length}</b>/${S.length} HV · Chưa học <b>${c("CHUA")}</b> · Đang học <b>${c("DANG")}</b> · Đã xong <b>${c("XONG")}</b> · GV chưa đóng phí <b>${noPhi}</b> (${money(noPhi*(+SET.phi_gv||0))}) · Xong chưa báo GV <b>${noBao}</b> · Xong chưa trả người chạy <b>${noTra}</b>` + (L.length>1500?` · <span class="tag t2">chỉ hiện 1500 dòng đầu – hãy lọc thêm</span>`:"");
   $("#printTitle").textContent = `DANH SÁCH HỌC ONLINE – ${SET.ten_don_vi||""} – in ngày ${dmy(TODAY)} – ${L.length} học viên`;
   $("#chkAll").checked = L.length>0 && L.every(s=>sel.has(s.id));
@@ -493,6 +500,7 @@ $("#tb").addEventListener("change", async e => {
 $("#tb").addEventListener("click", async e => {
   const tr = e.target.closest("tr"); if(!tr || !tr.dataset.id) return; const id = +tr.dataset.id;
   if(e.target.closest(".op")){ e.preventDefault(); openDetail(id); }
+  if(e.target.closest(".qtreo")){ e.target.closest(".qtreo").dataset.v==="1" ? treoHV([id]) : hocLai([id]); }
   if(e.target.closest(".note")){ const s = S.find(x=>x.id===id); const v = await promptBox("Ghi chú – "+s.ho_ten, s.ghi_chu); if(v!==null) await safe(async()=>{ await api("/api/students/update",{ids:[id],fields:{ghi_chu:v}}); await reloadKeep(); }); }
 });
 let lastClick = null;
@@ -510,6 +518,8 @@ $("#bNth").onchange = e => { if(e.target.value!=="") bulk({nth_id:+e.target.valu
 $("#bGv").onchange = e => { if(e.target.value) bulk({gv_id:+e.target.value}, "hàng loạt"); e.target.value=""; };
 $$("#bulk [data-b]").forEach(b => b.onclick = async () => { const a = b.dataset.b;
   if(a==="bao1") bulk({bao_gv:1}, "đã báo GV");
+  if(a==="treo1") treoHV([...sel]);
+  if(a==="treo0") hocLai([...sel]);
   if(a==="phi1") bulk({phi_gv:1}); if(a==="phi0") bulk({phi_gv:0}); if(a==="tt1") bulk({nth_tt:1}); if(a==="tt0") bulk({nth_tt:0});
   if(a==="bo"){ sel.clear(); renderTable(); }
   if(a==="xuat") location.href = "/api/export.xlsx?ids="+[...sel].join(",");
@@ -581,6 +591,7 @@ async function openDetail(id){
      ${x.mons.map(m=>`<tr><td class="wrap">${esc(m.mon)}</td><td class="num">${hm(m.done)}</td><td class="num">${hm(m.norm)}</td><td class="num">${m.dat?"":hm(Math.max(0,m.norm-m.done))}</td><td>${m.dat?'<span class="pill p-XONG">Đạt</span>':'<span class="pill p-CHUA">Chưa</span>'}</td></tr>`).join("")}</tbody></table>`:`<div class="hint">Chưa có dữ liệu tiến độ. Nạp file Learning Report của khóa ${esc(s.khoa)} để cập nhật.</div>`}
    ${x.toc_do!=null?`<div class="small" style="margin-bottom:4px">Tốc độ thực tế (tham khảo): <b>${x.toc_do} giờ/ngày</b>${x.toc_do<(+SET.max_gio_ngay)*0.6?' <span class="tag t2">chậm hơn mức '+esc(SET.max_gio_ngay)+'h – hỏi người chạy</span>':""}${x.dung_gio?` · <span class="tag t1">đứng giờ ${x.dung_gio} ngày</span>`:""}</div>`:""}
    ${chart}
+   ${s.treo?`<div class="warnbox" style="background:#ede7fb;color:#3d2a80">⏸ <b>Đang treo – nghỉ ngang</b> từ ${dmy(s.treo_ngay)||"—"}${s.treo_ly_do?": "+esc(s.treo_ly_do):""}. Không nhắc phí/báo GV cho đến khi học lại. <button class="btn sm ok" id="dHocLai">▶ Học lại</button></div>`:`<div class="row" style="margin-top:8px"><button class="btn sm" id="dTreo">⏸ Treo – học viên nghỉ ngang</button><span class="ti" data-tip="Dùng khi học viên học dở / đã chạy xong nhưng nghỉ ngang, chưa thu được phí. Học viên chuyển vào khung Treo, chờ học lại mới thu."></span></div>`}
    <h3 style="font-size:14px;margin:14px 0 8px">Thông tin</h3>
    <div class="form">
      <label>Họ tên</label><input id="eTen" value="${esc(s.ho_ten)}">
@@ -595,15 +606,18 @@ async function openDetail(id){
    <div class="row" style="margin-top:10px"><button class="btn pri" id="eSave">💾 Lưu thông tin</button></div>
    <h3 style="font-size:14px;margin:14px 0 8px">Nhật ký thay đổi</h3>
    <div class="small">${d.logs.map(l=>`<div style="padding:4px 0;border-bottom:1px solid var(--line)"><span class="muted">${esc(l.ts)}</span> · <b>${esc(l.hanh_dong)}</b> ${esc(l.chi_tiet)}</div>`).join("")||'<span class="muted">—</span>'}</div>`;
+  if($("#dTreo")) $("#dTreo").onclick = () => treoHV([id]);
+  if($("#dHocLai")) $("#dHocLai").onclick = () => hocLai([id]);
   $("#eSave").onclick = () => busy($("#eSave"), async()=>{ await api("/api/students/update",{ids:[id],fields:{ho_ten:$("#eTen").value,cccd:$("#eCccd").value,ngay_sinh:$("#eNs").value,ma_dk:$("#eMa").value,khoa:$("#eKhoa").value,hang:$("#eHang").value,gv_id:$("#eGv").value,ghi_chu:$("#eNote").value}}); toast("Đã lưu"); await reloadKeep(); });
   $("#drawer").classList.add("on");
 }
 
 // ---------------- việc hôm nay
 function renderOverview(){
-  const c = st => S.filter(s=>s.trang_thai===st).length, phi=+SET.phi_gv||0;
-  const noPhi = S.filter(s=>!s.phi_gv).length, xongNoTT = S.filter(s=>s.trang_thai==="XONG"&&!s.nth_tt&&s.nth_id&&s.nth_ten!=="MINE").length, chuaBao = S.filter(s=>s.trang_thai==="XONG"&&!s.bao_gv).length;
-  const canLoc = S.filter(s=>s.can_loc).length, lech = S.filter(s=>s.lechxong||s.lech).length;
+  const c = st => S.filter(s=>s.trang_thai===st && !s.treo).length, phi=+SET.phi_gv||0;
+  const noPhi = S.filter(s=>!s.phi_gv&&!s.treo).length, xongNoTT = S.filter(s=>s.trang_thai==="XONG"&&!s.nth_tt&&s.nth_id&&s.nth_ten!=="MINE").length, chuaBao = S.filter(s=>s.trang_thai==="XONG"&&!s.bao_gv&&!s.treo).length;
+  const canLoc = S.filter(s=>s.can_loc).length, lech = S.filter(s=>!s.treo&&(s.lechxong||s.lech)).length;
+  const T = REM.treo||[], tienTreo = T.reduce((a,x)=>a+x.tien,0);
   const kp = [
     ["Đang học", c("DANG"), "", ()=>goList({st:"DANG"})],
     ["Chưa học", c("CHUA"), "", ()=>goList({st:"CHUA"})],
@@ -612,10 +626,15 @@ function renderOverview(){
     ["Lệch / xong chưa đạt", lech, "cần kiểm tra", ()=>goList({k2:"lech", st:""}), lech],
     ["GV chưa đóng phí", noPhi, money(noPhi*phi), ()=>goList({phi:"0", st:""}), noPhi],
     ["Xong – chưa báo GV", chuaBao, "cần báo lại cho giáo viên", ()=>goList({k2:"chuabao", st:""}), chuaBao],
+    ["⏸ Đang treo", T.length, T.length? "nghỉ ngang · phí treo "+money(tienTreo):"nghỉ ngang", ()=>goList({k2:"treo", st:""})],
     ["Xong – chưa trả người chạy", xongNoTT, (+SET.don_gia_nth? money(xongNoTT*SET.don_gia_nth):""), ()=>goList({st:"XONG",tt:"0"})],
   ];
   $("#kpis").innerHTML = kp.map((k,i)=>`<div class="kpi ${k[4]?"red":""}" data-i="${i}"><div class="l">${k[0]}</div><div class="n">${k[1]}</div><div class="s">${esc(k[2])}</div></div>`).join("");
   $$("#kpis .kpi").forEach(el=>el.onclick=()=>kp[+el.dataset.i][3]());
+  $("#treoSub").textContent = T.length ? `${T.length} học viên · phí GV chưa thu ${money(tienTreo)} · chờ học lại mới thu` : "chờ học lại mới thu phí · không nằm trong các nhắc nhở khác";
+  $("#treoList").innerHTML = T.length ? `<div class="tbl" style="max-height:360px"><table><thead><tr><th>Học viên</th><th>Khóa</th><th>Giáo viên</th><th>Tiến độ</th><th>Treo từ</th><th>Lý do / ghi chú</th><th class="num">Phí GV</th><th></th></tr></thead><tbody>${T.map(x=>`<tr data-id="${x.id}"><td><a href="#" class="op"><b>${esc(x.ho_ten)}</b></a><div class="small muted">${esc(x.cccd)}</div></td><td>${esc(x.khoa)}</td><td class="small">${esc(x.gv)}${x.gv_sdt?`<div class="muted">${esc(x.gv_sdt)}</div>`:""}</td><td class="small"><span class="pill p-${x.trang_thai}">${ST[x.trang_thai]}</span> ${x.so_mon?x.pct+"% · "+x.so_dat+"/"+x.so_mon+" môn":""}</td><td class="small">${dmy(x.ngay)}</td><td class="small wrap" style="max-width:280px">${esc(x.ly_do||x.ghi_chu)}</td><td class="num">${x.phi_gv?'<span class="tag t4">đã đóng</span>':`<b style="color:var(--bad)">${money(x.tien)}</b>`}</td><td><button class="btn sm ok" data-hl="${x.id}">▶ Học lại</button></td></tr>`).join("")}</tbody></table></div>` : `<div class="empty">Không có học viên nào đang treo. Ở tab Học viên, bấm nút <b>⏸</b> cạnh trạng thái để treo học viên nghỉ ngang.</div>`;
+  $$("#treoList .op").forEach(a=>a.onclick=e=>{ e.preventDefault(); openDetail(+a.closest("tr").dataset.id); });
+  $$("#treoList [data-hl]").forEach(b=>b.onclick=()=>hocLai([+b.dataset.hl]));
   $("#canLoc").innerHTML = REM.can_loc.length ? REM.can_loc.map(k=>`<div class="list-row" data-k="${esc(k.khoa)}"><span class="grow"><b>${esc(k.khoa)}</b> <span class="small muted">${k.cu_nhat?"lọc gần nhất "+dmy(k.cu_nhat):"chưa nạp lần nào"}</span></span><span class="tag t2">${k.so} HV</span></div>`).join("") : `<div class="empty">✔ Không khóa nào cần lọc</div>`;
   $$("#canLoc .list-row").forEach(el=>el.onclick=()=>{ goList({khoa:el.dataset.k, st:"DANG"}); });
   const items = REM.items.filter(r=>r.muc<=2);
@@ -641,6 +660,36 @@ function renderOverview(){
   $$("#traNth [data-t]").forEach(b=>b.onclick=()=>{ const t = REM.tra_nth[+b.dataset.t]; const n = NTH.find(x=>x.ten===t.ten); goList({st:"XONG", tt:"0", nth: n?String(n.id):""}); });
   $$("#traNth [data-p]").forEach(b=>b.onclick=async()=>{ const t = REM.tra_nth[+b.dataset.p]; if(await confirmBox(`Đánh dấu đã trả cho <b>${esc(t.ten)}</b>: ${t.so} học viên${t.tien?" ("+money(t.tien)+")":""}?`)) busy(b, async()=>{ await api("/api/students/update",{ids:t.ids,fields:{nth_tt:1},note:"trả người chạy"}); toast("Đã cập nhật"); await loadAll(); }); });
 }
+// ---------- TREO (nghỉ ngang)
+function treoHV(ids){
+  if(!ids.length) return; const one = ids.length===1 ? S.find(x=>x.id===ids[0]) : null;
+  modal(`<h3>⏸ Treo – học viên nghỉ ngang</h3>
+   <div>${one?`<b>${esc(one.ho_ten)}</b> (${esc(one.khoa)}) · ${ST[one.trang_thai]}${one.so_mon?" · "+one.pct+"%":""}`:`<b>${ids.length}</b> học viên đang chọn`}</div>
+   <div class="hint">Học viên treo sẽ <b>không còn trong các nhắc nhở</b> (phí GV, báo GV, cần lọc…) và nằm riêng ở khung <b>Treo</b> của tab Việc hôm nay. Khi học viên đi học lại, bấm <b>▶ Học lại</b> rồi thu phí bình thường.</div>
+   <label class="small muted">Lý do / ghi chú</label><input id="trLy" style="width:100%" placeholder="VD: nghỉ không học nữa, nào học lại đổi tên sau" value="${esc(one?(one.treo_ly_do||one.ghi_chu||""):"")}">
+   <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn" onclick="closeModal()">Hủy</button><button class="btn pri" id="trOk">⏸ Treo</button></div>`);
+  $("#trLy").focus(); $("#trLy").onkeydown = e => { if(e.key==="Enter") $("#trOk").click(); };
+  $("#trOk").onclick = () => busy($("#trOk"), async()=>{ await api("/api/students/update",{ids, fields:{treo:1, treo_ly_do:$("#trLy").value}, note:"treo – nghỉ ngang"}); closeModal(); sel.clear(); toast(`Đã treo ${ids.length} học viên`); await reloadKeep(); });
+}
+function hocLai(ids){
+  if(!ids.length) return; const one = ids.length===1 ? S.find(x=>x.id===ids[0]) : null;
+  modal(`<h3>▶ Học viên đi học lại</h3>
+   <div>${one?`<b>${esc(one.ho_ten)}</b> · đang ghi khóa <b>${esc(one.khoa)}</b>${one.treo_ngay?" · treo từ "+dmy(one.treo_ngay):""}`:`<b>${ids.length}</b> học viên đang chọn`}</div>
+   <div class="form" style="margin-top:10px">
+     <label>Khóa học lại</label><input id="hlKhoa" list="dlKhoa2" placeholder="Để trống = giữ khóa cũ" value="">
+     <label>Ghi chú thêm</label><input id="hlNote" placeholder="VD: học lại khóa BSTĐ-30, đổi tên…">
+   </div>
+   <datalist id="dlKhoa2">${[...new Set(S.map(s=>s.khoa).filter(Boolean))].map(k=>`<option value="${esc(k)}">`).join("")}</datalist>
+   <div class="small muted" style="margin-top:6px">Bỏ treo → học viên quay lại danh sách và các nhắc nhở (phí GV chưa đóng sẽ được nhắc lại). Nếu đổi họ tên/CCCD, mở chi tiết học viên để sửa.</div>
+   <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn" onclick="closeModal()">Hủy</button><button class="btn ok" id="hlOk">▶ Học lại</button></div>`);
+  $("#hlOk").onclick = () => busy($("#hlOk"), async()=>{
+    const f = {treo:0}; if($("#hlKhoa").value.trim()) f.khoa = $("#hlKhoa").value.trim();
+    const note = $("#hlNote").value.trim();
+    await api("/api/students/update",{ids, fields:f, note:"học lại"});
+    if(note) for(const id of ids){ const x = S.find(z=>z.id===id); await api("/api/students/update",{ids:[id], fields:{ghi_chu: ((x&&x.ghi_chu)?x.ghi_chu+" | ":"")+note}}); }
+    closeModal(); sel.clear(); toast(`Đã bỏ treo ${ids.length} học viên`); await reloadKeep(); });
+}
+
 // ---------- soạn tin Zalo + ảnh thông báo
 function copyMsg(m){ composeMsg(m); }
 function copyText(t){ if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t); const ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); return Promise.resolve(); }
@@ -845,7 +894,7 @@ async function loadImports(){
 // ---------------- thống kê
 async function loadStats(){
   const T = await safe(()=>api("/api/stats")); if(!T) return; const t = T.tong;
-  $("#tkKpi").innerHTML = [["Tổng HV",t.tong],["Đã xong",t.xong],["Đang học",t.dang],["Chưa học",t.chua],["GV đã đóng phí",t.phi_ok,money(t.tien_thu)],["GV chưa đóng",t.phi_no,money(t.tien_no)],["Xong – chưa trả người chạy",t.tt_no,t.don_gia_nth?money(t.tien_tra_no):""]]
+  $("#tkKpi").innerHTML = [["Tổng HV",t.tong],["Đã xong",t.xong],["Đang học",t.dang],["Chưa học",t.chua],["GV đã đóng phí",t.phi_ok,money(t.tien_thu)],["GV chưa đóng",t.phi_no,money(t.tien_no)],["⏸ Phí đang treo",t.phi_treo,money(t.tien_treo)+(t.treo?" · "+t.treo+" HV treo":"")],["Xong – chưa trả người chạy",t.tt_no,t.don_gia_nth?money(t.tien_tra_no):""]]
     .map(k=>`<div class="kpi"><div class="l">${k[0]}</div><div class="n">${k[1]}</div><div class="s">${k[2]||""}</div></div>`).join("");
   const tb = (L, cols) => `<div class="tbl" style="max-height:50vh"><table><thead><tr>${cols.map(c=>`<th class="${c[2]||""}">${c[0]}</th>`).join("")}</tr></thead><tbody>${L.map(x=>`<tr>${cols.map(c=>`<td class="${c[2]||""}">${c[3]?c[3](x):esc(x[c[1]])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
   const prog = x => `${x.tong?Math.round(x.xong*100/x.tong):0}%`;

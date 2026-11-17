@@ -11,9 +11,9 @@ from urllib.parse import urlparse, parse_qs, unquote
 
 APP_NAME = "QUẢN LÝ HỌC ONLINE Ô TÔ"
 APP_ID = "hoc-online-oto"
-VERSION = "1.3.1"
-VERSION_DATE = "20/10/2026"
-SCHEMA_VERSION = 4
+VERSION = "1.4"
+VERSION_DATE = "17/11/2026"
+SCHEMA_VERSION = 5
 GITHUB_REPO = "HP-wukoong/QUAN_LY_LT_ONLINE"
 GITHUB_BRANCH = "main"
 MINE = "MINE"   # người chạy mặc định
@@ -235,6 +235,11 @@ MIGRATIONS = {
         "UPDATE teachers SET xung_ho='anh' WHERE COALESCE(xung_ho,'') IN ('','Thầy')",
         "UPDATE teachers SET xung_ho='chị' WHERE xung_ho='Cô'",
         "DELETE FROM settings WHERE key='backup_interval_h'",
+    ],
+    5: [   # TREO: học viên nghỉ ngang – tạm gác, chờ học lại mới thu
+        "ALTER TABLE students ADD COLUMN treo INTEGER DEFAULT 0",
+        "ALTER TABLE students ADD COLUMN treo_ngay TEXT DEFAULT ''",
+        "ALTER TABLE students ADD COLUMN treo_ly_do TEXT DEFAULT ''",
     ],
 }
 
@@ -940,7 +945,7 @@ def compute_all(include_deleted=False):
                 j -= 1
             if j < len(h) - 1:
                 d["dung_gio"] = (to_date(h[-1][0]) - to_date(h[j][0])).days
-        d["can_loc"] = bool(r["trang_thai"] == ST_DANG and (not r["ngay_loc"] or d["so_ngay_tu_loc"] >= nloc or d["qua_du_kien"]))
+        d["can_loc"] = bool(not r["treo"] and r["trang_thai"] == ST_DANG and (not r["ngay_loc"] or d["so_ngay_tu_loc"] >= nloc or d["qua_du_kien"]))
         out.append(d)
     return out, st
 
@@ -954,6 +959,8 @@ def reminders(S, st):
         R.append(dict(muc=muc, loai=loai, id=s["id"], ho_ten=s["ho_ten"], khoa=s["khoa"], gv=s.get("gv_ten") or "",
                       nth=s.get("nth_ten") or "", msg=msg))
     for s in S:
+        if s.get("treo"):
+            continue                                   # đang treo: không nhắc gì, nằm ở khung TREO
         if s["trang_thai"] == ST_XONG:
             if not s["bao_gv"]:
                 add(1, "CHƯA BÁO GV", s, "Đã chạy xong%s – chưa báo lại cho GV %s" % (
@@ -981,6 +988,8 @@ def reminders(S, st):
     dg = int(st["don_gia_nth"])
     can_loc = {}
     for s in S:
+        if s.get("treo"):
+            continue
         if s["can_loc"] or (s["trang_thai"] == ST_DANG and s["ngay_du_kien"] and to_date(s["ngay_du_kien"]) <= td + dt.timedelta(days=1)):
             x = can_loc.setdefault(s["khoa"] or "(chưa có khóa)", dict(khoa=s["khoa"] or "(chưa có khóa)", so=0, cu_nhat=None))
             x["so"] += 1
@@ -988,7 +997,7 @@ def reminders(S, st):
                 x["cu_nhat"] = s["ngay_loc"]
     gom = {}
     for s in S:
-        if not s["phi_gv"] and s.get("gv_ten"):
+        if not s["phi_gv"] and s.get("gv_ten") and not s.get("treo"):
             gom.setdefault((s["gv_ten"], s.get("gv_sdt") or "", (s.get("gv_xh") or "anh").lower()), []).append(s)
     cuoi = st["mau_cuoi"].strip()
 
@@ -1010,7 +1019,7 @@ def reminders(S, st):
     # báo GV: HV đã xong chưa báo, gom theo GV
     bao = {}
     for s in S:
-        if s["trang_thai"] == ST_XONG and not s["bao_gv"]:
+        if s["trang_thai"] == ST_XONG and not s["bao_gv"] and not s.get("treo"):
             k = (s.get("gv_ten") or "(chưa có GV)", s.get("gv_sdt") or "", (s.get("gv_xh") or "anh").lower())
             bao.setdefault(k, []).append(s)
     bao_gv = []
@@ -1027,6 +1036,12 @@ def reminders(S, st):
         text = fill_tpl(st["mau_bao"], **kw) + "\n\n" + "\n\n".join(parts) + (("\n\n" + fill_tpl(cuoi, **kw)) if cuoi else "")
         bao_gv.append(dict(gv=gv, sdt=sdt, so=len(lst), ids=[x["id"] for x in lst], so_no_phi=len(no_phi),
                            loai="bao", xung_ho=xh, ten_goi=ten_goi, text=text))
+    treo = [dict(id=s["id"], ho_ten=s["ho_ten"], cccd=s["cccd"], khoa=s["khoa"], gv=s.get("gv_ten") or "", gv_sdt=s.get("gv_sdt") or "",
+                 nth=s.get("nth_ten") or "", trang_thai=s["trang_thai"], pct=s["pct"], so_dat=s["so_dat"], so_mon=s["so_mon"],
+                 ngay=s.get("treo_ngay") or "", ly_do=s.get("treo_ly_do") or "", ghi_chu=s.get("ghi_chu") or "",
+                 phi_gv=s["phi_gv"], tien=0 if s["phi_gv"] else phi)
+            for s in S if s.get("treo")]
+    treo.sort(key=lambda x: (x["ngay"] or "9999", x["ho_ten"]))
     tra = {}
     for s in S:
         if s["trang_thai"] == ST_XONG and s["nth_id"] and not s["nth_tt"] and s.get("nth_ten") != MINE:
@@ -1034,7 +1049,7 @@ def reminders(S, st):
             x["so"] += 1
             x["tien"] += dg
             x["ids"].append(s["id"])
-    return dict(items=R, can_loc=sorted(can_loc.values(), key=lambda x: -x["so"]), tin_gv=tin, bao_gv=bao_gv,
+    return dict(items=R, can_loc=sorted(can_loc.values(), key=lambda x: -x["so"]), tin_gv=tin, bao_gv=bao_gv, treo=treo,
                 tra_nth=sorted(tra.values(), key=lambda x: -x["so"]))
 
 def stats(S, st):
@@ -1045,13 +1060,16 @@ def stats(S, st):
         g = {}
         for s in S:
             k = s.get(key) or "(chưa gán)"
-            x = g.setdefault(k, dict(ten=k, tong=0, chua=0, dang=0, xong=0, phi_ok=0, phi_no=0, tien_thu=0, tt_ok=0, tt_no=0,
+            x = g.setdefault(k, dict(ten=k, tong=0, chua=0, dang=0, xong=0, phi_ok=0, phi_no=0, phi_treo=0, treo=0, tien_thu=0, tt_ok=0, tt_no=0,
                                      tien_tra=0, toc=[], sdt=s.get("gv_sdt") if key == "gv_ten" else ""))
             x["tong"] += 1
             x[{"CHUA": "chua", "DANG": "dang", "XONG": "xong"}[s["trang_thai"]]] += 1
+            x["treo"] += 1 if s.get("treo") else 0
             if s["phi_gv"]:
                 x["phi_ok"] += 1
                 x["tien_thu"] += s["phi_gv_tien"] or phi
+            elif s.get("treo"):
+                x["phi_treo"] += 1
             else:
                 x["phi_no"] += 1
             if s["nth_tt"]:
@@ -1071,9 +1089,11 @@ def stats(S, st):
              xong=sum(s["trang_thai"] == ST_XONG for s in S), phi_ok=sum(s["phi_gv"] for s in S),
              tien_thu=sum((s["phi_gv_tien"] or phi) for s in S if s["phi_gv"]),
              tt_no=sum(1 for s in S if s["trang_thai"] == ST_XONG and s["nth_id"] and not s["nth_tt"] and s.get("nth_ten") != MINE),
-             chua_bao=sum(1 for s in S if s["trang_thai"] == ST_XONG and not s["bao_gv"]),
+             chua_bao=sum(1 for s in S if s["trang_thai"] == ST_XONG and not s["bao_gv"] and not s.get("treo")),
+             treo=sum(1 for s in S if s.get("treo")), phi_treo=sum(1 for s in S if s.get("treo") and not s["phi_gv"]),
              phi_gv=phi, don_gia_nth=dg)
-    T["phi_no"] = T["tong"] - T["phi_ok"]
+    T["phi_no"] = T["tong"] - T["phi_ok"] - T["phi_treo"]
+    T["tien_treo"] = T["phi_treo"] * phi
     T["tien_no"] = T["phi_no"] * phi
     T["tien_tra_no"] = T["tt_no"] * dg
     thang = {}
@@ -1104,7 +1124,8 @@ def student_detail(sid):
     return dict(student=dict(s), hist=hist, logs=logs)
 
 # ----------------------------------------------------------------- SỬA / THÊM / XÓA
-EDITABLE = {"ho_ten", "cccd", "ngay_sinh", "ma_dk", "khoa", "hang", "gv_id", "nth_id", "phi_gv", "nth_tt", "bao_gv", "trang_thai", "ghi_chu"}
+EDITABLE = {"ho_ten", "cccd", "ngay_sinh", "ma_dk", "khoa", "hang", "gv_id", "nth_id", "phi_gv", "nth_tt", "bao_gv", "trang_thai", "ghi_chu",
+            "treo", "treo_ly_do"}
 
 def update_students(ids, fields, note=""):
     fields = {k: v for k, v in fields.items() if k in EDITABLE}
@@ -1124,7 +1145,8 @@ def update_students(ids, fields, note=""):
         if k in fields: fields[k] = clean(fields[k])[:500]
     for k in ("gv_id", "nth_id"):
         if k in fields: fields[k] = int(fields[k]) if fields[k] not in (None, "", 0, "0") else None
-    for k in ("phi_gv", "nth_tt", "bao_gv"):
+    if "treo_ly_do" in fields: fields["treo_ly_do"] = clean(fields["treo_ly_do"])[:300]
+    for k in ("phi_gv", "nth_tt", "bao_gv", "treo"):
         if k in fields: fields[k] = 1 if fields[k] in (1, True, "1", "true") else 0
     st = get_settings()
     with DB_LOCK:
@@ -1139,6 +1161,10 @@ def update_students(ids, fields, note=""):
                 if "phi_gv" in f and f["phi_gv"] != old["phi_gv"]:
                     f["phi_gv_ngay"] = today().isoformat() if f["phi_gv"] else ""
                     f["phi_gv_tien"] = int(st["phi_gv"]) if f["phi_gv"] else 0
+                if "treo" in f and f["treo"] != old["treo"]:
+                    f["treo_ngay"] = today().isoformat() if f["treo"] else ""
+                    if not f["treo"] and "treo_ly_do" not in fields:
+                        f["treo_ly_do"] = ""
                 if "bao_gv" in f and f["bao_gv"] != old["bao_gv"]:
                     f["bao_gv_ngay"] = today().isoformat() if f["bao_gv"] else ""
                 if "nth_id" in f and not f["nth_id"]:
@@ -1351,7 +1377,7 @@ def export_xlsx(ids=None):
     for i, s in enumerate(S, 1):
         has = bool(s["mons"])
         v = [i, s["ho_ten"], s["cccd"], s["khoa"], s.get("gv_ten") or "", s.get("gv_sdt") or "",
-             "XONG" if s["phi_gv"] else "CHƯA", ST_LABEL[s["trang_thai"]], ("ĐÃ BÁO" if s["bao_gv"] else "CHƯA BÁO") if s["trang_thai"] == ST_XONG else "", s.get("nth_ten") or "", "ĐÃ TT" if s["nth_tt"] else "",
+             "XONG" if s["phi_gv"] else "CHƯA", ST_LABEL[s["trang_thai"]] + (" (TREO)" if s.get("treo") else ""), ("ĐÃ BÁO" if s["bao_gv"] else "CHƯA BÁO") if s["trang_thai"] == ST_XONG else "", s.get("nth_ten") or "", "ĐÃ TT" if s["nth_tt"] else "",
              "%d/%d" % (s["so_dat"], s["so_mon"]) if has else "", fmt_hm(s["tong_done"]) if has else "",
              fmt_hm(s["tong_norm"]) if has else "", s["pct"] / 100.0 if has else None, fmt_hm(s["con_lai"]) if has else "",
              s["so_ngay"] if s["so_ngay"] else "", ddmm(s["ngay_du_kien"]), ddmm(s["ngay_loc"]), s["ghi_chu"] or ""]

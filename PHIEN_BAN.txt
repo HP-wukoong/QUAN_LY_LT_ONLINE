@@ -1,6 +1,15 @@
 LỊCH SỬ PHIÊN BẢN – QUẢN LÝ HỌC ONLINE Ô TÔ
 (Phiên bản đang chạy hiện ở góc trái trên cùng của tool.)
 
+v1.4 – 17/11/2026
+  + TREO – học viên nghỉ ngang: nút ⏸ cạnh trạng thái (tab Học viên), trong chi tiết HV, hoặc chọn nhiều → "Treo".
+    Nhập lý do (vd "nghỉ không học nữa, nào học lại đổi tên sau").
+  + Khung "⏸ Treo – học viên nghỉ ngang" ở tab Việc hôm nay: danh sách, ngày treo, lý do, phí GV chưa thu; nút ▶ Học lại
+    (có thể đổi sang khóa mới, thêm ghi chú) – học viên quay lại các nhắc nhở để thu phí.
+  + Học viên treo KHÔNG còn nằm trong: GV chưa đóng phí, tin nhắn nhắc phí, chưa báo GV, cần lọc lại, lệch kết quả…
+    Vẫn tính vào "chưa trả người chạy" (người chạy đã chạy giờ).
+  + Ô số "⏸ Đang treo", lọc "Đang treo", thống kê "Phí đang treo"; Excel ghi "(TREO)" ở cột tình trạng.
+
 v1.3.1 – 20/10/2026
   * Sửa: sau khi cập nhật, tool khởi động lại đúng cổng cũ → trang đang mở tự nạp lại bản mới.
 
