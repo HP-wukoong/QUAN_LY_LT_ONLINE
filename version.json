@@ -1,5 +1,5 @@
 {
-  "version": "1.4",
+  "version": "1.4.1",
   "date": "17/11/2026",
-  "notes": "Thêm TREO – học viên nghỉ ngang: nút ⏸ cạnh trạng thái, khung Treo ở Việc hôm nay, chờ học lại mới thu phí; học viên treo không còn trong các nhắc nhở."
+  "notes": "Tiền trả người chạy treo theo học viên nghỉ ngang (không tính vào \"Chưa trả tiền người chạy\" cho đến khi học lại).\nThêm TREO – học viên nghỉ ngang: nút ⏸ cạnh trạng thái, khung Treo ở Việc hôm nay, chờ học lại mới thu phí; học viên treo không còn trong các nhắc nhở."
 }

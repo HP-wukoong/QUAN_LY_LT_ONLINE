@@ -11,7 +11,7 @@ from urllib.parse import urlparse, parse_qs, unquote
 
 APP_NAME = "QUẢN LÝ HỌC ONLINE Ô TÔ"
 APP_ID = "hoc-online-oto"
-VERSION = "1.4"
+VERSION = "1.4.1"
 VERSION_DATE = "17/11/2026"
 SCHEMA_VERSION = 5
 GITHUB_REPO = "HP-wukoong/QUAN_LY_LT_ONLINE"
@@ -1039,12 +1039,14 @@ def reminders(S, st):
     treo = [dict(id=s["id"], ho_ten=s["ho_ten"], cccd=s["cccd"], khoa=s["khoa"], gv=s.get("gv_ten") or "", gv_sdt=s.get("gv_sdt") or "",
                  nth=s.get("nth_ten") or "", trang_thai=s["trang_thai"], pct=s["pct"], so_dat=s["so_dat"], so_mon=s["so_mon"],
                  ngay=s.get("treo_ngay") or "", ly_do=s.get("treo_ly_do") or "", ghi_chu=s.get("ghi_chu") or "",
-                 phi_gv=s["phi_gv"], tien=0 if s["phi_gv"] else phi)
+                 phi_gv=s["phi_gv"], tien=0 if s["phi_gv"] else phi,
+                 nth_treo=1 if (s["nth_id"] and not s["nth_tt"] and s.get("nth_ten") != MINE) else 0,
+                 tien_nth=dg if (s["nth_id"] and not s["nth_tt"] and s.get("nth_ten") != MINE) else 0)
             for s in S if s.get("treo")]
     treo.sort(key=lambda x: (x["ngay"] or "9999", x["ho_ten"]))
     tra = {}
     for s in S:
-        if s["trang_thai"] == ST_XONG and s["nth_id"] and not s["nth_tt"] and s.get("nth_ten") != MINE:
+        if s["trang_thai"] == ST_XONG and s["nth_id"] and not s["nth_tt"] and s.get("nth_ten") != MINE and not s.get("treo"):
             x = tra.setdefault(s["nth_ten"], dict(ten=s["nth_ten"], so=0, tien=0, ids=[]))
             x["so"] += 1
             x["tien"] += dg
@@ -1075,6 +1077,8 @@ def stats(S, st):
             if s["nth_tt"]:
                 x["tt_ok"] += 1
                 x["tien_tra"] += s["nth_tt_tien"] or dg
+            elif s.get("treo") and s["nth_id"] and s.get("nth_ten") != MINE:
+                x["tt_treo"] = x.get("tt_treo", 0) + 1
             elif s["trang_thai"] == ST_XONG and s["nth_id"] and s.get("nth_ten") != MINE:
                 x["tt_no"] += 1
             if s["trang_thai"] == ST_DANG and s["toc_do"] is not None:
@@ -1088,7 +1092,8 @@ def stats(S, st):
     T = dict(tong=len(S), chua=sum(s["trang_thai"] == ST_CHUA for s in S), dang=sum(s["trang_thai"] == ST_DANG for s in S),
              xong=sum(s["trang_thai"] == ST_XONG for s in S), phi_ok=sum(s["phi_gv"] for s in S),
              tien_thu=sum((s["phi_gv_tien"] or phi) for s in S if s["phi_gv"]),
-             tt_no=sum(1 for s in S if s["trang_thai"] == ST_XONG and s["nth_id"] and not s["nth_tt"] and s.get("nth_ten") != MINE),
+             tt_no=sum(1 for s in S if s["trang_thai"] == ST_XONG and s["nth_id"] and not s["nth_tt"] and s.get("nth_ten") != MINE and not s.get("treo")),
+             tt_treo=sum(1 for s in S if s.get("treo") and s["nth_id"] and not s["nth_tt"] and s.get("nth_ten") != MINE),
              chua_bao=sum(1 for s in S if s["trang_thai"] == ST_XONG and not s["bao_gv"] and not s.get("treo")),
              treo=sum(1 for s in S if s.get("treo")), phi_treo=sum(1 for s in S if s.get("treo") and not s["phi_gv"]),
              phi_gv=phi, don_gia_nth=dg)

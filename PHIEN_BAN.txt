@@ -1,6 +1,10 @@
 LỊCH SỬ PHIÊN BẢN – QUẢN LÝ HỌC ONLINE Ô TÔ
 (Phiên bản đang chạy hiện ở góc trái trên cùng của tool.)
 
+v1.4.1 – 17/11/2026
+  * Tiền trả người chạy TREO THEO học viên nghỉ ngang: không nằm trong "Chưa trả tiền người chạy" / nút "Đã trả hết";
+    khung Treo hiện cột Người chạy "treo tiền"; thống kê người chạy có cột Treo. Học lại → tính trả bình thường.
+
 v1.4 – 17/11/2026
   + TREO – học viên nghỉ ngang: nút ⏸ cạnh trạng thái (tab Học viên), trong chi tiết HV, hoặc chọn nhiều → "Treo".
     Nhập lý do (vd "nghỉ không học nữa, nào học lại đổi tên sau").

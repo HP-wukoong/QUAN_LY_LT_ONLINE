@@ -174,9 +174,9 @@ tr.treo td{background:#f6f3ff}
   <div class="three">
     <div class="card"><h2>📣 Báo GV: học viên đã chạy xong <span class="sub">📨 gửi Zalo → bấm Đã báo</span></h2><div id="baoGv"></div></div>
     <div class="card"><h2>💰 GV chưa đóng phí <span class="sub">📨 soạn tin + ảnh gửi Zalo</span></h2><div id="phiGv"></div></div>
-    <div class="card"><h2>🧾 Chưa trả tiền người chạy <span class="sub">HV đã xong, có người chạy, chưa thanh toán</span></h2><div id="traNth"></div></div>
+    <div class="card"><h2>🧾 Chưa trả tiền người chạy <span class="sub">HV đã xong, có người chạy, chưa thanh toán (không gồm HV treo)</span></h2><div id="traNth"></div></div>
   </div>
-  <div class="card"><h2>⏸ Treo – học viên nghỉ ngang <span class="sub" id="treoSub">chờ học lại mới thu phí · không nằm trong các nhắc nhở khác</span><span class="ti" data-tip="Học viên đang học / đã chạy xong nhưng nghỉ ngang, chưa thu được phí. Bấm nút ⏸ cạnh trạng thái (tab Học viên) để đưa vào đây. Khi học viên đi học lại, bấm “▶ Học lại” – có thể đổi khóa mới – rồi thu phí như bình thường."></span></h2><div id="treoList"></div></div>
+  <div class="card"><h2>⏸ Treo – học viên nghỉ ngang <span class="sub" id="treoSub">chờ học lại mới thu phí · không nằm trong các nhắc nhở khác</span><span class="ti" data-tip="Học viên đang học / đã chạy xong nhưng nghỉ ngang, chưa thu được phí. Tiền trả người chạy của HV này cũng treo theo, không tính vào “Chưa trả tiền người chạy”. Bấm nút ⏸ cạnh trạng thái (tab Học viên) để đưa vào đây. Khi học viên đi học lại, bấm “▶ Học lại” – có thể đổi khóa mới – rồi thu phí như bình thường."></span></h2><div id="treoList"></div></div>
 </section>
 
 <!-- ============ HỌC VIÊN ============ -->
@@ -421,7 +421,7 @@ function filtered(){
   let L = S.filter(s =>
     (!q || q.split(/\s+/).every(w=>s._q.includes(w))) && (k2==="treo" || stOk(s)) && (!kh || s.khoa===kh) &&
     (!gv || (gv==="-" ? !s.gv_id : String(s.gv_id)===gv)) && (!nth || (nth==="-" ? !s.nth_id : String(s.nth_id)===nth)) &&
-    (phi==="" || String(s.phi_gv)===phi) && (tt==="" || (tt==="1" ? s.nth_tt : (!s.nth_tt && s.trang_thai==="XONG" && s.nth_id && s.nth_ten!=="MINE"))) &&
+    (phi==="" || String(s.phi_gv)===phi) && (tt==="" || (tt==="1" ? s.nth_tt : (!s.nth_tt && s.trang_thai==="XONG" && s.nth_id && s.nth_ten!=="MINE" && !s.treo))) &&
     (k2==="treo" ? s.treo : (fSt==="" || !s.treo)) &&
     (!k2 || k2==="treo" || (k2==="chualoc" && !s.ngay_loc) || (k2==="chuabao" && s.trang_thai==="XONG" && !s.bao_gv) || (k2==="lech" && (s.lechxong || s.lech)) || (k2==="canloc" && s.can_loc) ||
       (k2==="quahan" && s.qua_du_kien) || (k2==="dunggio" && s.dung_gio>=+SET.ngay_dung_gio) ||
@@ -482,7 +482,7 @@ function renderTable(){
     <td class="wrap small" style="max-width:200px;min-width:90px"><span class="note" title="Bấm để sửa ghi chú">${esc(s.ghi_chu)||'<span class="muted noprint">✎</span>'}</span></td></tr>`; }).join("")
     : `<tr><td colspan="13" class="empty">Không có học viên phù hợp bộ lọc.<div style="margin-top:6px">Đang lọc: ${activeFilters().map(t=>`<span class="tag t3">${esc(t)}</span>`).join(" ")||"—"}</div><button class="btn sm pri" style="margin-top:8px" onclick="keepStatusClear()">Bỏ các lọc khác, giữ trạng thái</button></td></tr>`;
   const c = st => L.filter(s=>s.trang_thai===st).length;
-  const noPhi = L.filter(s=>!s.phi_gv&&!s.treo).length, noTra = L.filter(s=>s.trang_thai==="XONG"&&s.nth_id&&!s.nth_tt&&s.nth_ten!=="MINE").length, noBao = L.filter(s=>s.trang_thai==="XONG"&&!s.bao_gv&&!s.treo).length;
+  const noPhi = L.filter(s=>!s.phi_gv&&!s.treo).length, noTra = L.filter(s=>s.trang_thai==="XONG"&&s.nth_id&&!s.nth_tt&&s.nth_ten!=="MINE"&&!s.treo).length, noBao = L.filter(s=>s.trang_thai==="XONG"&&!s.bao_gv&&!s.treo).length;
   $("#hvSum").innerHTML = `Đang hiện <b>${L.length}</b>/${S.length} HV · Chưa học <b>${c("CHUA")}</b> · Đang học <b>${c("DANG")}</b> · Đã xong <b>${c("XONG")}</b> · GV chưa đóng phí <b>${noPhi}</b> (${money(noPhi*(+SET.phi_gv||0))}) · Xong chưa báo GV <b>${noBao}</b> · Xong chưa trả người chạy <b>${noTra}</b>` + (L.length>1500?` · <span class="tag t2">chỉ hiện 1500 dòng đầu – hãy lọc thêm</span>`:"");
   $("#printTitle").textContent = `DANH SÁCH HỌC ONLINE – ${SET.ten_don_vi||""} – in ngày ${dmy(TODAY)} – ${L.length} học viên`;
   $("#chkAll").checked = L.length>0 && L.every(s=>sel.has(s.id));
@@ -615,7 +615,7 @@ async function openDetail(id){
 // ---------------- việc hôm nay
 function renderOverview(){
   const c = st => S.filter(s=>s.trang_thai===st && !s.treo).length, phi=+SET.phi_gv||0;
-  const noPhi = S.filter(s=>!s.phi_gv&&!s.treo).length, xongNoTT = S.filter(s=>s.trang_thai==="XONG"&&!s.nth_tt&&s.nth_id&&s.nth_ten!=="MINE").length, chuaBao = S.filter(s=>s.trang_thai==="XONG"&&!s.bao_gv&&!s.treo).length;
+  const noPhi = S.filter(s=>!s.phi_gv&&!s.treo).length, xongNoTT = S.filter(s=>s.trang_thai==="XONG"&&!s.nth_tt&&s.nth_id&&s.nth_ten!=="MINE"&&!s.treo).length, chuaBao = S.filter(s=>s.trang_thai==="XONG"&&!s.bao_gv&&!s.treo).length;
   const canLoc = S.filter(s=>s.can_loc).length, lech = S.filter(s=>!s.treo&&(s.lechxong||s.lech)).length;
   const T = REM.treo||[], tienTreo = T.reduce((a,x)=>a+x.tien,0);
   const kp = [
@@ -631,8 +631,9 @@ function renderOverview(){
   ];
   $("#kpis").innerHTML = kp.map((k,i)=>`<div class="kpi ${k[4]?"red":""}" data-i="${i}"><div class="l">${k[0]}</div><div class="n">${k[1]}</div><div class="s">${esc(k[2])}</div></div>`).join("");
   $$("#kpis .kpi").forEach(el=>el.onclick=()=>kp[+el.dataset.i][3]());
-  $("#treoSub").textContent = T.length ? `${T.length} học viên · phí GV chưa thu ${money(tienTreo)} · chờ học lại mới thu` : "chờ học lại mới thu phí · không nằm trong các nhắc nhở khác";
-  $("#treoList").innerHTML = T.length ? `<div class="tbl" style="max-height:360px"><table><thead><tr><th>Học viên</th><th>Khóa</th><th>Giáo viên</th><th>Tiến độ</th><th>Treo từ</th><th>Lý do / ghi chú</th><th class="num">Phí GV</th><th></th></tr></thead><tbody>${T.map(x=>`<tr data-id="${x.id}"><td><a href="#" class="op"><b>${esc(x.ho_ten)}</b></a><div class="small muted">${esc(x.cccd)}</div></td><td>${esc(x.khoa)}</td><td class="small">${esc(x.gv)}${x.gv_sdt?`<div class="muted">${esc(x.gv_sdt)}</div>`:""}</td><td class="small"><span class="pill p-${x.trang_thai}">${ST[x.trang_thai]}</span> ${x.so_mon?x.pct+"% · "+x.so_dat+"/"+x.so_mon+" môn":""}</td><td class="small">${dmy(x.ngay)}</td><td class="small wrap" style="max-width:280px">${esc(x.ly_do||x.ghi_chu)}</td><td class="num">${x.phi_gv?'<span class="tag t4">đã đóng</span>':`<b style="color:var(--bad)">${money(x.tien)}</b>`}</td><td><button class="btn sm ok" data-hl="${x.id}">▶ Học lại</button></td></tr>`).join("")}</tbody></table></div>` : `<div class="empty">Không có học viên nào đang treo. Ở tab Học viên, bấm nút <b>⏸</b> cạnh trạng thái để treo học viên nghỉ ngang.</div>`;
+  const nthTreo = T.filter(x=>x.nth_treo).length, tienNthTreo = T.reduce((a,x)=>a+(x.tien_nth||0),0);
+  $("#treoSub").textContent = T.length ? `${T.length} học viên · phí GV chưa thu ${money(tienTreo)}${nthTreo?` · tiền người chạy treo ${nthTreo} HV${tienNthTreo?" ("+money(tienNthTreo)+")":""}`:""} · chờ học lại mới thu/trả` : "chờ học lại mới thu phí · không nằm trong các nhắc nhở khác";
+  $("#treoList").innerHTML = T.length ? `<div class="tbl" style="max-height:360px"><table><thead><tr><th>Học viên</th><th>Khóa</th><th>Giáo viên</th><th>Tiến độ</th><th>Treo từ</th><th>Lý do / ghi chú</th><th class="num">Phí GV</th><th>Người chạy</th><th></th></tr></thead><tbody>${T.map(x=>`<tr data-id="${x.id}"><td><a href="#" class="op"><b>${esc(x.ho_ten)}</b></a><div class="small muted">${esc(x.cccd)}</div></td><td>${esc(x.khoa)}</td><td class="small">${esc(x.gv)}${x.gv_sdt?`<div class="muted">${esc(x.gv_sdt)}</div>`:""}</td><td class="small"><span class="pill p-${x.trang_thai}">${ST[x.trang_thai]}</span> ${x.so_mon?x.pct+"% · "+x.so_dat+"/"+x.so_mon+" môn":""}</td><td class="small">${dmy(x.ngay)}</td><td class="small wrap" style="max-width:280px">${esc(x.ly_do||x.ghi_chu)}</td><td class="num">${x.phi_gv?'<span class="tag t4">đã đóng</span>':`<b style="color:var(--bad)">${money(x.tien)}</b>`}</td><td class="small">${esc(x.nth)}${x.nth_treo?`<div class="tag t5">treo tiền${x.tien_nth?" "+money(x.tien_nth):""}</div>`:(x.nth&&x.nth!=="MINE"?'<div class="muted">đã trả</div>':"")}</td><td><button class="btn sm ok" data-hl="${x.id}">▶ Học lại</button></td></tr>`).join("")}</tbody></table></div>` : `<div class="empty">Không có học viên nào đang treo. Ở tab Học viên, bấm nút <b>⏸</b> cạnh trạng thái để treo học viên nghỉ ngang.</div>`;
   $$("#treoList .op").forEach(a=>a.onclick=e=>{ e.preventDefault(); openDetail(+a.closest("tr").dataset.id); });
   $$("#treoList [data-hl]").forEach(b=>b.onclick=()=>hocLai([+b.dataset.hl]));
   $("#canLoc").innerHTML = REM.can_loc.length ? REM.can_loc.map(k=>`<div class="list-row" data-k="${esc(k.khoa)}"><span class="grow"><b>${esc(k.khoa)}</b> <span class="small muted">${k.cu_nhat?"lọc gần nhất "+dmy(k.cu_nhat):"chưa nạp lần nào"}</span></span><span class="tag t2">${k.so} HV</span></div>`).join("") : `<div class="empty">✔ Không khóa nào cần lọc</div>`;
@@ -665,7 +666,7 @@ function treoHV(ids){
   if(!ids.length) return; const one = ids.length===1 ? S.find(x=>x.id===ids[0]) : null;
   modal(`<h3>⏸ Treo – học viên nghỉ ngang</h3>
    <div>${one?`<b>${esc(one.ho_ten)}</b> (${esc(one.khoa)}) · ${ST[one.trang_thai]}${one.so_mon?" · "+one.pct+"%":""}`:`<b>${ids.length}</b> học viên đang chọn`}</div>
-   <div class="hint">Học viên treo sẽ <b>không còn trong các nhắc nhở</b> (phí GV, báo GV, cần lọc…) và nằm riêng ở khung <b>Treo</b> của tab Việc hôm nay. Khi học viên đi học lại, bấm <b>▶ Học lại</b> rồi thu phí bình thường.</div>
+   <div class="hint">Học viên treo sẽ <b>không còn trong các nhắc nhở</b> (phí GV, báo GV, cần lọc…), <b>tiền trả người chạy cũng treo theo</b>, và nằm riêng ở khung <b>Treo</b> của tab Việc hôm nay. Khi học viên đi học lại, bấm <b>▶ Học lại</b> rồi thu phí bình thường.</div>
    <label class="small muted">Lý do / ghi chú</label><input id="trLy" style="width:100%" placeholder="VD: nghỉ không học nữa, nào học lại đổi tên sau" value="${esc(one?(one.treo_ly_do||one.ghi_chu||""):"")}">
    <div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn" onclick="closeModal()">Hủy</button><button class="btn pri" id="trOk">⏸ Treo</button></div>`);
   $("#trLy").focus(); $("#trLy").onkeydown = e => { if(e.key==="Enter") $("#trOk").click(); };
@@ -899,7 +900,7 @@ async function loadStats(){
   const tb = (L, cols) => `<div class="tbl" style="max-height:50vh"><table><thead><tr>${cols.map(c=>`<th class="${c[2]||""}">${c[0]}</th>`).join("")}</tr></thead><tbody>${L.map(x=>`<tr>${cols.map(c=>`<td class="${c[2]||""}">${c[3]?c[3](x):esc(x[c[1]])}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
   const prog = x => `${x.tong?Math.round(x.xong*100/x.tong):0}%`;
   $("#tkGv").innerHTML = tb(T.gv, [["Giáo viên","ten"],["Tổng","tong","num"],["Xong","xong","num"],["Đang","dang","num"],["Chưa","chua","num"],["Đã đóng","phi_ok","num"],["Chưa đóng","phi_no","num",x=>x.phi_no?`<b style="color:var(--bad)">${x.phi_no}</b>`:"0"],["Tiền chưa đóng","tien_no","num",x=>x.tien_no?money(x.tien_no):""]]);
-  $("#tkNth").innerHTML = tb(T.nth, [["Người chạy","ten"],["Tổng","tong","num"],["Đang","dang","num"],["Chưa","chua","num"],["Xong","xong","num"],["% xong","","num",prog],["Tốc độ TB","","num",x=>x.toc_do!=null?x.toc_do+"h/ngày":""],["Đã trả","tt_ok","num"],["Xong chưa trả","tt_no","num",x=>x.tt_no?`<b style="color:var(--bad)">${x.tt_no}</b>`:"0"]].concat(t.don_gia_nth?[["Tiền còn trả","tien_tra_no","num",x=>x.tien_tra_no?money(x.tien_tra_no):""]]:[]));
+  $("#tkNth").innerHTML = tb(T.nth, [["Người chạy","ten"],["Tổng","tong","num"],["Đang","dang","num"],["Chưa","chua","num"],["Xong","xong","num"],["% xong","","num",prog],["Tốc độ TB","","num",x=>x.toc_do!=null?x.toc_do+"h/ngày":""],["Đã trả","tt_ok","num"],["Xong chưa trả","tt_no","num",x=>x.tt_no?`<b style="color:var(--bad)">${x.tt_no}</b>`:"0"],["Treo","tt_treo","num",x=>x.tt_treo?`<span class="tag t5">${x.tt_treo}</span>`:""]].concat(t.don_gia_nth?[["Tiền còn trả","tien_tra_no","num",x=>x.tien_tra_no?money(x.tien_tra_no):""]]:[]));
   $("#tkThang").innerHTML = T.thang.length ? tb(T.thang, [["Tháng","thang","",x=>x.thang.split("-").reverse().join("/")],["HV mới","moi","num"],["HV xong","xong","num"],["Phí thu (HV)","phi_so","num"],["Tiền phí","phi_tien","num",x=>money(x.phi_tien)],["Trả người chạy (HV)","tt_so","num"],["Tiền trả","tt_tien","num",x=>x.tt_tien?money(x.tt_tien):""]]) : `<div class="empty">Chưa có dữ liệu theo tháng (bắt đầu tính từ khi tích trong tool)</div>`;
   $("#tkKhoa").innerHTML = tb(T.khoa.sort((a,b)=>coll.compare(a.ten,b.ten)), [["Khóa","ten"],["Tổng","tong","num"],["Chưa","chua","num"],["Đang","dang","num"],["Xong","xong","num"],["% xong","","num",prog],["Chưa đóng phí","phi_no","num"]]);
 }
