@@ -1,4 +1,4 @@
-QUẢN LÝ HỌC ONLINE Ô TÔ  v1.4 (17/11/2026)  –  HƯỚNG DẪN NHANH
+QUẢN LÝ HỌC ONLINE Ô TÔ  v1.5 (17/11/2026)  –  HƯỚNG DẪN NHANH
 =====================================================
 
 1. CÀI LẦN ĐẦU (1 lần)
@@ -63,7 +63,8 @@ QUẢN LÝ HỌC ONLINE Ô TÔ  v1.4 (17/11/2026)  –  HƯỚNG DẪN NHANH
 9. CẬP NHẬT PHIÊN BẢN MỚI
    - Cài đặt → "Cập nhật phiên bản" → Kiểm tra cập nhật → Cập nhật ngay. Tool tự sao lưu, tải bản mới từ
      GitHub (https://github.com/HP-wukoong/QUAN_LY_LT_ONLINE), giữ nguyên dữ liệu và tự khởi động lại.
-   - Khi có bản mới, thanh tiêu đề hiện nút vàng "⬆ Có bản vX".
+   - Mặc định: mở tool hoặc bấm F5 là tool tự cập nhật lên bản mới nhất (màn hình "Đang cập nhật…" rồi tự tải lại).
+   - Đổi chế độ ở Cài đặt → Cập nhật phiên bản (tự cập nhật / chỉ báo nút vàng / tắt).
    - Không mở được tool: tắt cửa sổ đen rồi chạy CAP_NHAT.bat.
 
 10. GỬI ZALO CHO GIÁO VIÊN

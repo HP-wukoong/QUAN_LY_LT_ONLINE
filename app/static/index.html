@@ -328,7 +328,7 @@ tr.treo td{background:#f6f3ff}
       <div class="row" style="margin-top:10px">
         <button class="btn" id="updCheck">🔎 Kiểm tra cập nhật</button><span class="ti" data-tip="Hỏi GitHub xem có phiên bản mới hơn bản đang dùng không. Cần có mạng internet."></span>
         <button class="btn ok" id="updApply" style="display:none">⬆ Cập nhật ngay</button>
-        <select data-k="tu_kiem_tra_cap_nhat"><option value="1">Tự kiểm tra khi mở tool</option><option value="0">Không tự kiểm tra</option></select>
+        <select data-k="tu_cap_nhat" id="selTuCN"><option value="f5">Mở tool / bấm F5 là TỰ cập nhật</option><option value="hoi">Chỉ báo có bản mới (tự bấm cập nhật)</option><option value="0">Không tự kiểm tra</option></select><span class="ti l" data-tip="Chế độ F5: mỗi lần mở tool hoặc bấm F5, tool hỏi GitHub (tối đa 1 lần/phút). Có bản mới → tự sao lưu, tải bản mới, khởi động lại và tải lại trang – dữ liệu giữ nguyên."></span>
       </div>
       <div class="small muted" style="margin-top:8px">Không vào được tool? Chạy file <b>CAP_NHAT.bat</b> trong thư mục tool để cập nhật thủ công.</div>
     </div>
@@ -337,6 +337,9 @@ tr.treo td{background:#f6f3ff}
 </main>
 
 <div class="drawer" id="drawer"><div class="hd"><b id="dTitle" style="flex:1"></b><button class="btn sm" id="dClose">✕</button></div><div class="bd" id="dBody"></div></div>
+<div id="updOverlay" style="display:none;position:fixed;inset:0;background:rgba(16,42,67,.92);z-index:200;color:#fff;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;font-size:18px">
+  <div style="font-size:46px">⬆</div><div id="updOvText">Đang cập nhật phiên bản mới…</div>
+  <div style="font-size:13px;opacity:.8">Dữ liệu đã được sao lưu và giữ nguyên. Trang sẽ tự tải lại – đừng tắt cửa sổ đen.</div></div>
 <div class="modal-bg" id="mbg"><div class="modal" id="modal"></div></div>
 <div id="toast"></div>
 
@@ -964,9 +967,7 @@ function renderUpd(u){
 }
 $("#updCheck").onclick = () => busy($("#updCheck"), async()=>{ const u = await api("/api/update/check",{}); renderUpd(u); if(u.co_ban_moi){ $("#updBadge").style.display=""; $("#updBadge").textContent="⬆ Có bản v"+u.latest; } else toast(u.error||"Đang dùng bản mới nhất", !!u.error); });
 $("#updApply").onclick = async () => { if(!(await confirmBox("Tải và cài bản mới từ GitHub?<br>Tool sẽ tự sao lưu dữ liệu, cập nhật rồi <b>khởi động lại</b> (cửa sổ đen mới sẽ mở). Dữ liệu giữ nguyên."))) return;
-  busy($("#updApply"), async()=>{ const r = await api("/api/update/apply",{}); toast("Đã tải v"+r.version+" – đang khởi động lại…");
-    const old = (await api("/api/info").catch(()=>({}))).version; let n=0;
-    const t = setInterval(async()=>{ n++; try{ const i = await (await fetch("/api/info")).json(); if(i.version && i.version!==old){ clearInterval(t); location.reload(); } }catch(e){} if(n>60){ clearInterval(t); toast("Hãy mở lại CHAY_TOOL.bat", true); } }, 2000); }); };
+  busy($("#updApply"), async()=>{ const cur = (await api("/api/info")).version; const r = await api("/api/update/apply",{}); $("#updOverlay").style.display="flex"; $("#updOvText").textContent="Đang cập nhật lên v"+r.version+" …"; await waitNewVersion(cur); }); };
 $("#updBadge").onclick = () => { showTab("cd"); setTimeout(()=>$("#updCheck").scrollIntoView({behavior:"smooth"}),200); };
 $("#tplPreview").onclick = () => { const m = (REM.tin_gv||[])[0] || (REM.bao_gv||[])[0]; if(!m) return toast("Chưa có GV nào cần nhắc để xem thử", true); copyMsg(m); };
 document.addEventListener("click", e => { const t = e.target.closest(".ti"); $$(".ti.on").forEach(x=>{ if(x!==t) x.classList.remove("on"); }); if(t) t.classList.toggle("on"); });
@@ -982,8 +983,24 @@ $("#showTrash").onclick = () => safe(async()=>{ const T = await api("/api/studen
   $$("#trash [data-r]").forEach(b=>b.onclick=()=>safe(async()=>{ await api("/api/students/delete",{ids:[+b.dataset.r],restore:1}); toast("Đã khôi phục"); await loadAll(); $("#showTrash").click(); }));
   $$("#trash [data-p]").forEach(b=>b.onclick=async()=>{ if(await confirmBox("Xóa VĨNH VIỄN học viên này cùng toàn bộ lịch sử tiến độ? Không hoàn tác được (trừ khi khôi phục bản sao lưu).")) safe(async()=>{ await api("/api/students/purge",{ids:[+b.dataset.p]}); toast("Đã xóa hẳn"); $("#showTrash").click(); }); }); });
 
+// ---------------- tự cập nhật khi mở / F5
+async function waitNewVersion(oldVer){
+  for(let n=0;n<90;n++){ await new Promise(r=>setTimeout(r,1500));
+    try{ const i = await (await fetch("/api/info",{cache:"no-store"})).json(); if(i.version && i.version!==oldVer){ location.reload(); return; } }catch(e){} }
+  $("#updOvText").innerHTML = "Chưa thấy tool khởi động lại.<br>Hãy tắt cửa sổ đen rồi mở lại <b>CHAY_TOOL.bat</b>.";
+}
+async function autoUpdateOnLoad(){
+  try{
+    const u = await (await fetch("/api/update/auto",{cache:"no-store"})).json();
+    if(u.updating){ const ov=$("#updOverlay"); ov.style.display="flex"; $("#updOvText").textContent = "Đang cập nhật lên v"+(u.version||u.latest)+" …"; await waitNewVersion(u.current); return true; }
+    if(u.co_ban_moi){ $("#updBadge").style.display=""; $("#updBadge").textContent="⬆ Có bản v"+u.latest; }
+    if(u.error && u.mode==="f5" && /Tự cập nhật lỗi/.test(u.error)) toast(u.error, true);
+  }catch(e){}
+  return false;
+}
+
 // ---------------- khởi động
-(async()=>{ await safe(loadAll); let t="tq"; try{ t = localStorage.getItem("hoTab")||"tq"; }catch(e){} showTab(t);
+(async()=>{ autoUpdateOnLoad(); await safe(loadAll); let t="tq"; try{ t = localStorage.getItem("hoTab")||"tq"; }catch(e){} showTab(t);
   setInterval(()=>{ if(!document.hidden && !$("#mbg").classList.contains("on") && !sel.size && document.activeElement.tagName!=="INPUT") safe(loadAll); }, 5*60*1000); })();
 </script>
 </body>

@@ -11,7 +11,7 @@ from urllib.parse import urlparse, parse_qs, unquote
 
 APP_NAME = "QUẢN LÝ HỌC ONLINE Ô TÔ"
 APP_ID = "hoc-online-oto"
-VERSION = "1.4.1"
+VERSION = "1.5"
 VERSION_DATE = "17/11/2026"
 SCHEMA_VERSION = 5
 GITHUB_REPO = "HP-wukoong/QUAN_LY_LT_ONLINE"
@@ -52,7 +52,8 @@ SETTINGS_SPEC = {
     "backup_extra_dir": ("", "text", None, None),
     "backup_interval_m": ("1", "int", 1, 1440),
     "backup_giu": ("10", "int", 3, 200),
-    "tu_kiem_tra_cap_nhat": ("1", "enum", ("0", "1"), None),
+    "tu_kiem_tra_cap_nhat": ("1", "enum", ("0", "1"), None),   # (cũ, giữ để tương thích)
+    "tu_cap_nhat": ("f5", "enum", ("f5", "hoi", "0"), None),   # f5 = mở tool / bấm F5 là tự cập nhật
     # mẫu tin nhắn Zalo – {so} {xung_ho} {ten} {tien} {ten_day_du}
     "mau_phi": ("Em gửi danh sách {so} học viên học online {xung_ho} {ten} chưa đóng phí ({tien} đ):", "text", None, None),
     "mau_bao": ("Em gửi danh sách {so} học viên học online {xung_ho} {ten} đã chạy đủ giờ các môn:", "text", None, None),
@@ -1607,19 +1608,58 @@ def http_get(url, timeout=20):
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()
 
-def check_update():
-    url = "https://raw.githubusercontent.com/%s/%s/version.json?t=%d" % (GITHUB_REPO, GITHUB_BRANCH, int(time.time()))
+UPDATE_LOCK = threading.Lock()
+CHECK_EVERY = 60          # giây – F5 liên tục cũng chỉ hỏi GitHub tối đa 1 lần/phút
+
+def fetch_version_info():
+    """Đọc version.json mới nhất. Ưu tiên API GitHub (không bị cache), lỗi thì đọc raw."""
+    tries = [
+        ("https://api.github.com/repos/%s/contents/version.json?ref=%s" % (GITHUB_REPO, GITHUB_BRANCH), {"Accept": "application/vnd.github.raw"}),
+        ("https://raw.githubusercontent.com/%s/%s/version.json?t=%d" % (GITHUB_REPO, GITHUB_BRANCH, int(time.time())), {}),
+    ]
+    last = None
+    for url, hdr in tries:
+        try:
+            req = urllib.request.Request(url, headers=dict({"User-Agent": "hoc-online-oto/" + VERSION, "Cache-Control": "no-cache"}, **hdr))
+            with urllib.request.urlopen(req, timeout=10) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except Exception as e:
+            last = e
+    raise last
+
+def check_update(force=True):
+    if not force and UPDATE_STATE.get("_ts") and time.time() - UPDATE_STATE["_ts"] < CHECK_EVERY:
+        return {k: v for k, v in UPDATE_STATE.items() if not k.startswith("_")}
     try:
-        info = json.loads(http_get(url, 10).decode("utf-8"))
+        info = fetch_version_info()
         UPDATE_STATE.update(checked=now_s(), latest=info.get("version"), notes=info.get("notes", ""),
                             date=info.get("date", ""), error="")
     except Exception as e:
         msg = "Chưa có thông tin phiên bản trên GitHub" if getattr(e, "code", None) == 404 else "Không kết nối được GitHub – kiểm tra mạng internet (%s)" % e.__class__.__name__
         UPDATE_STATE.update(checked=now_s(), error=msg)
+    UPDATE_STATE["_ts"] = time.time()
     UPDATE_STATE["current"] = VERSION
     UPDATE_STATE["co_ban_moi"] = bool(UPDATE_STATE.get("latest") and ver_tuple(UPDATE_STATE["latest"]) > ver_tuple(VERSION))
     UPDATE_STATE["repo"] = "https://github.com/" + GITHUB_REPO
-    return dict(UPDATE_STATE)
+    return {k: v for k, v in UPDATE_STATE.items() if not k.startswith("_")}
+
+def auto_update():
+    """Gọi mỗi lần mở trang / F5: có bản mới + đang bật chế độ F5 thì tự cập nhật rồi khởi động lại."""
+    mode = get_settings()["tu_cap_nhat"]
+    if mode == "0":
+        return dict(updating=False, mode=mode)
+    u = check_update(force=False)
+    if mode != "f5" or not u.get("co_ban_moi"):
+        return dict(u, updating=False, mode=mode)
+    if not UPDATE_LOCK.acquire(blocking=False):
+        return dict(u, updating=True, mode=mode)          # đang cập nhật ở tab khác
+    try:
+        r = apply_update()
+    except Exception as e:
+        UPDATE_LOCK.release()
+        return dict(u, updating=False, mode=mode, error="Tự cập nhật lỗi: %s" % e)
+    restart_later()
+    return dict(u, updating=True, mode=mode, version=r["version"])
 
 SKIP_TOP = ("data", "backups", ".git", ".github")
 
@@ -1737,7 +1777,7 @@ class H(BaseHTTPRequestHandler):
             if p == "/api/backups":
                 return self._send(200, list_backups())
             if p == "/api/update":
-                return self._send(200, dict(UPDATE_STATE, current=VERSION, repo="https://github.com/" + GITHUB_REPO))
+                return self._send(200, dict({k: v for k, v in UPDATE_STATE.items() if not k.startswith("_")}, current=VERSION, repo="https://github.com/" + GITHUB_REPO))
             if p == "/api/backup_info":
                 return self._send(200, backup_info(q.get("file", "")))
             if p == "/api/info":
@@ -1795,8 +1835,11 @@ class H(BaseHTTPRequestHandler):
                 return self._send(200, {"ok": True})
             if p == "/api/update/check":
                 return self._send(200, check_update())
+            if p == "/api/update/auto":
+                return self._send(200, auto_update())
             if p == "/api/update/apply":
-                r = apply_update()
+                with UPDATE_LOCK:
+                    r = apply_update()
                 restart_later()
                 return self._send(200, r)
             return self._send(404, {"error": "Không có"})
@@ -1882,7 +1925,7 @@ def main():
         return
     SRV["srv"] = srv
     SRV["port"] = port
-    if get_settings()["tu_kiem_tra_cap_nhat"] == "1":
+    if get_settings()["tu_cap_nhat"] != "0":
         threading.Thread(target=check_update, daemon=True).start()
     print("=" * 62)
     print(" %s  v%s" % (strip_accents(APP_NAME), VERSION))
