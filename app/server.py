@@ -11,7 +11,7 @@ from urllib.parse import urlparse, parse_qs, unquote
 
 APP_NAME = "QUẢN LÝ HỌC ONLINE Ô TÔ"
 APP_ID = "hoc-online-oto"
-VERSION = "1.5"
+VERSION = "1.5.1"
 VERSION_DATE = "17/11/2026"
 SCHEMA_VERSION = 5
 GITHUB_REPO = "HP-wukoong/QUAN_LY_LT_ONLINE"
@@ -1776,6 +1776,8 @@ class H(BaseHTTPRequestHandler):
                 return self._send(200, r)
             if p == "/api/backups":
                 return self._send(200, list_backups())
+            if p == "/api/update/auto":
+                return self._send(200, auto_update())
             if p == "/api/update":
                 return self._send(200, dict({k: v for k, v in UPDATE_STATE.items() if not k.startswith("_")}, current=VERSION, repo="https://github.com/" + GITHUB_REPO))
             if p == "/api/backup_info":
